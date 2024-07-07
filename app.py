@@ -13,6 +13,11 @@ with st.sidebar:
 
   show_sources = st.toggle('Show Sources', value=True)
 
+  st.divider()
+
+  openai_api_key = st.text_input("OpenAI API Key", key="chatbot_api_key", type="password")
+  "[Get an OpenAI API key](https://platform.openai.com/account/api-keys)"
+
 # populate session state
 if 'messages' not in st.session_state:
   st.session_state['messages'] = [
@@ -34,11 +39,15 @@ query = st.chat_input(
 )
 
 if query:
+  if not openai_api_key:
+    st.info("Please add your OpenAI API key to continue.")
+    st.stop()
+
   st.session_state.messages.append({'role': 'user', 'content': query})
   st.chat_message('user').markdown(query)
 
   with st.spinner('thinking...'):
-    response = generate_response(query, response_source_count, show_sources)
+    response = generate_response(query, response_source_count, show_sources, openai_api_key)
 
   st.session_state.messages.append({'role': 'assistant', 'content': response})
   st.chat_message('assistant').markdown(response, unsafe_allow_html=True)

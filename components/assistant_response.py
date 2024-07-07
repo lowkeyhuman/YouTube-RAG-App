@@ -1,7 +1,7 @@
+from langchain_openai import ChatOpenAI
 from components.sources_html import sources_html
 from services.vector_database.vector_database_service import similarity_search
 from langchain.prompts import ChatPromptTemplate
-from langchain_community.llms.ollama import Ollama
 
 PROMPT_TEMPLATE = '''
 Answer the question based only on the following context. 
@@ -13,7 +13,7 @@ Answer the question based on the above context.
 The question: {question}
 '''
 
-def generate_response(query: str, response_source_count: int, show_sources: bool) -> str:
+def generate_response(query: str, response_source_count: int, show_sources: bool, openai_api_key: str) -> str:
   try:
     relevant_queryResponses = similarity_search(query, response_source_count)
   except:
@@ -23,10 +23,11 @@ def generate_response(query: str, response_source_count: int, show_sources: bool
   prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
   prompt = prompt_template.format(context=context_text, question=query)
 
-  llm = Ollama(model='llama3', temperature=0)
-  response = llm.invoke(prompt)
+  llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0, api_key=openai_api_key)
+  baseMessage = llm.invoke(prompt)
+  response = baseMessage.content
 
   if show_sources:
-    response = sources_html(relevant_queryResponses)
+    response += sources_html(relevant_queryResponses)
   
   return response
